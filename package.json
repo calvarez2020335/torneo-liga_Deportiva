@@ -1,0 +1,30 @@
+{
+  "name": "torneo-liga_deportiva",
+  "version": "1.0.0",
+  "description": "Ejercicio -Torneo/Ligas deportivas",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/calvarez2020335/torneo-liga_Deportiva.git"
+  },
+  "author": "Carlos Alvarez",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt-nodejs": "^0.0.3",
+    "cors": "^2.8.5",
+    "express": "^4.17.3",
+    "jwt-simple": "^0.5.6",
+    "moment": "^2.29.1",
+    "mongoose": "^6.2.2",
+    "nodemon": "^2.0.15",
+    "pdfkit": "^0.13.0"
+  },
+  "bugs": {
+    "url": "https://github.com/calvarez2020335/torneo-liga_Deportiva/issues"
+  },
+  "homepage": "https://github.com/calvarez2020335/torneo-liga_Deportiva#readme"
+}
