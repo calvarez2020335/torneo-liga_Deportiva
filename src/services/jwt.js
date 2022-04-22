@@ -6,7 +6,7 @@ exports.crearToken = function (usuario) {
     let payload = {
         sub: usuario._id,
         nombre: usuario.nombre,
-        usuario: usuario.usuario,
+        email: usuario.email,
         rol: usuario.rol,
         iat: moment().unix(),
         exp: moment().day(7, 'days').unix()
