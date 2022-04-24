@@ -29,6 +29,10 @@ function adminInicio(req, res) {
   });
 }
 
+function registrar(req, res){
+    
+}
+
 module.exports = {
   adminInicio,
 };
