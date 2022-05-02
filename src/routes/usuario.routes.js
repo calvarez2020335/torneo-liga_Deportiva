@@ -6,11 +6,11 @@ const usuarioController = require('../controllers/usuario.controller')
 const md_auth = require('../middlewares/autenticacion')
 const md_roles = require('../middlewares/roles')
 
-const app = express.Router()
+const api = express.Router()
 
 //rutas
-
+api.post('/registrar', usuarioController.registrarUsuario)
 
 
 //Exportaciones
-module.exports = app
+module.exports = api

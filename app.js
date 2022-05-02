@@ -5,6 +5,7 @@ var app = express();
 
 // importacion de rutas
 
+const usuarioRutas = require('./src/routes/usuario.routes')
 
 //MIDDLEWARES
 
@@ -18,7 +19,7 @@ app.use(cors());
 
 //Carga de rutas
 
-//app.use('/api',);
+app.use('/api', usuarioRutas);
 
 
 //Exportaciones
