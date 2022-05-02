@@ -76,9 +76,42 @@ function registrarUsuario(req, res) {
   }
 }
 
-
+function login(req, res) {
+  const parametro = req.body;
+  Usuario.findOne({ email: parametro.email }, (err, usuarioEncontrado) => {
+    if (err)
+      return res.status(500).send({ error: "Error en la petición: " + err });
+    if (usuarioEncontrado) {
+      bcrypt.compare(
+        parametro.password,
+        usuarioEncontrado.password,
+        (err, verificacionPassword) => {
+          if (verificacionPassword) {
+            if (parametro.obtenerToken === "true") {
+              return res
+                .status(200)
+                .send({ token: jwt.crearToken(usuarioEncontrado) });
+            } else {
+              usuarioEncontrado.password == undefined;
+              return res.status(200).send({ usuario: usuarioEncontrado });
+            }
+          } else {
+            return res.status(500).send({ error: "La contraseña no coincide" });
+          }
+        }
+      );
+    } else {
+      return res
+        .status(404)
+        .send({
+          error: "El correo no se encuentra registrado, cree su cuenta",
+        });
+    }
+  });
+}
 
 module.exports = {
   adminInicio,
-  registrarUsuario
+  registrarUsuario,
+  login
 };

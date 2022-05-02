@@ -10,7 +10,7 @@ const api = express.Router()
 
 //rutas
 api.post('/registrar', usuarioController.registrarUsuario)
-
+api.post('/login', usuarioController.login)
 
 //Exportaciones
 module.exports = api
