@@ -162,7 +162,7 @@ function editarUsuario(req, res) {
       if (usuarioEncontrado.rol !== "ROL_USUARIO") {
         return res
           .status(403)
-          .send({ error: "No puede editar a los administradores" });
+          .send({ error: "Los administradores no se pueden editar" });
       } else {
         Usuario.findByIdAndUpdate(
           idUser,
@@ -202,6 +202,10 @@ function editarUsuario(req, res) {
       );
     }
   });
+}
+
+function eliminarUsuarios(req, res){
+  
 }
 
 module.exports = {
