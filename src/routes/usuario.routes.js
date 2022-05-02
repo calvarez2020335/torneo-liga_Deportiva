@@ -11,6 +11,8 @@ const api = express.Router()
 //rutas
 api.post('/registrar', usuarioController.registrarUsuario)
 api.post('/login', usuarioController.login)
+api.post('/registrarAdmin', [md_auth.Auth, md_roles.verAdministrador] ,usuarioController.registrarUsuarioAdmin)
+api.put('/editarUsuario/:idUser?', md_auth.Auth, usuarioController.editarUsuario)
 
 //Exportaciones
 module.exports = api

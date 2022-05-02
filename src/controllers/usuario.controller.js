@@ -12,7 +12,7 @@ function adminInicio(req, res) {
 
   Usuario.find({ email: "ADMIN" }, (err, usuarioEncontrado) => {
     if (usuarioEncontrado.length == 0) {
-      bcrypt.hash("123456", null, null, (err, passwordEncriptada) => {
+      bcrypt.hash("deportes123", null, null, (err, passwordEncriptada) => {
         usuarioModel.password = passwordEncriptada;
 
         usuarioModel.save((err, usuarioGuardado) => {
@@ -101,11 +101,105 @@ function login(req, res) {
         }
       );
     } else {
-      return res
-        .status(404)
-        .send({
-          error: "El correo no se encuentra registrado, cree su cuenta",
-        });
+      return res.status(404).send({
+        error: "El correo no se encuentra registrado, cree su cuenta",
+      });
+    }
+  });
+}
+
+function registrarUsuarioAdmin(req, res) {
+  const parametro = req.body;
+  const modeloUsuario = new Usuario();
+
+  if (parametro.nombre && parametro.email && parametro.password) {
+    modeloUsuario.nombre = parametro.nombre;
+    modeloUsuario.email = parametro.email;
+    modeloUsuario.password = parametro.password;
+    modeloUsuario.rol = "ROL_ADMIN";
+
+    Usuario.find({ email: parametro.email }, (err, usuarioEncontrado) => {
+      if (usuarioEncontrado.length == 0) {
+        bcrypt.hash(
+          parametro.password,
+          null,
+          null,
+          (err, passwordEncriptada) => {
+            modeloUsuario.password = passwordEncriptada;
+
+            modeloUsuario.save((err, usuarioGuardado) => {
+              if (err)
+                return res
+                  .status(500)
+                  .send({ mensaje: "Error en la petición" });
+              if (!usuarioGuardado)
+                return res
+                  .status(500)
+                  .send({ mensaje: "Error al agregar usuario admin" });
+              return res
+                .status(200)
+                .send({ usuarioAdminCreado: usuarioGuardado });
+            });
+          }
+        );
+      } else {
+        return res.status(500).send({ error: "El correo ya esta en uso" });
+      }
+    });
+  } else {
+    return res
+      .status(500)
+      .send({ error: "Debe de enviar los parametros obligatorios" });
+  }
+}
+
+function editarUsuario(req, res) {
+  const idUser = req.params.idUser;
+  const parametros = req.body;
+
+  Usuario.findOne({ _id: idUser }, (err, usuarioEncontrado) => {
+    if (req.user.rol == "ROL_ADMIN") {
+      if (usuarioEncontrado.rol !== "ROL_USUARIO") {
+        return res
+          .status(403)
+          .send({ error: "No puede editar a los administradores" });
+      } else {
+        Usuario.findByIdAndUpdate(
+          idUser,
+          { $set: { nombre: parametros.nombre, email: parametros.email } },
+          { new: true },
+          (err, usuarioActualizado) => {
+            if (err)
+              return res.status(500).send({ error: "Error en la pericion" });
+            if (!usuarioActualizado)
+              return res
+                .status(500)
+                .send({ error: "Error al editar el usuario" });
+            return res
+              .status(200)
+              .send({ usuarioActualizado: usuarioActualizado });
+          }
+        );
+      }
+    } else {
+      Usuario.findByIdAndUpdate(
+        req.user.sub,
+        { $set: { nombre: parametros.nombre, email: parametros.email } },
+        { new: true },
+        (err, usuarioActualizado) => {
+          if (err)
+            return res
+              .status(500)
+              .send({ mensaje: "Error en la peticion del usuario" });
+          if (!usuarioActualizado)
+            return res
+              .status(500)
+              .send({ mensaje: "Error al editar el usuario" });
+          return res
+            .status(200)
+            .send({ usuarioActualizado: usuarioActualizado });
+        }
+      );
     }
   });
 }
@@ -113,5 +207,7 @@ function login(req, res) {
 module.exports = {
   adminInicio,
   registrarUsuario,
-  login
+  login,
+  registrarUsuarioAdmin,
+  editarUsuario
 };
