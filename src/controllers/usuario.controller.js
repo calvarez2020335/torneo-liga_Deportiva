@@ -204,8 +204,35 @@ function editarUsuario(req, res) {
   });
 }
 
-function eliminarUsuarios(req, res){
-  
+function eliminarUsuarios(req, res) {
+  var idUser = req.params.idUser;
+
+  Usuario.findOne({ _id: idUser }, (err, usuarioEncontrado) => {
+    if (req.user.rol == "ROL_ADMIN") {
+      if (usuarioEncontrado.rol !== "ROL_USUARIO") {
+        return res
+          .status(403)
+          .send({ mensaje: "No se pueden eliminar a los Administradores" });
+      } else {
+        Usuario.findByIdAndDelete(idUser, (err, usuarioEliminado) => {
+          if (err)
+            return res.status(500).send({ mensaje: "Error en la peticion" });
+          if (!usuarioEliminado)
+            return res
+              .status(403)
+              .send({ mensaje: "Error al eliminar el cliente" });
+
+          return res.status(200).send({ usuario: usuarioEliminado });
+        });
+      }
+    }
+  });
+}
+
+function verUsuarios(req, res) {
+  Usuario.find({rol:"ROL_USUARIO"}, (err, usuarioEncontrado) => {
+    return res.status(200).send({usuarios: usuarioEncontrado});
+  })
 }
 
 module.exports = {
@@ -213,5 +240,7 @@ module.exports = {
   registrarUsuario,
   login,
   registrarUsuarioAdmin,
-  editarUsuario
+  editarUsuario,
+  eliminarUsuarios,
+  verUsuarios
 };
