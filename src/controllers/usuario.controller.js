@@ -1,4 +1,5 @@
 const Usuario = require("../models/usuario.model");
+const Torneo = require("../models/torneos.model");
 const bcrypt = require("bcrypt-nodejs");
 const jwt = require("../services/jwt");
 
@@ -158,49 +159,59 @@ function editarUsuario(req, res) {
   const parametros = req.body;
 
   Usuario.findOne({ _id: idUser }, (err, usuarioEncontrado) => {
-    if (req.user.rol == "ROL_ADMIN") {
-      if (usuarioEncontrado.rol !== "ROL_USUARIO") {
-        return res
-          .status(403)
-          .send({ error: "Los administradores no se pueden editar" });
-      } else {
-        Usuario.findByIdAndUpdate(
-          idUser,
-          { $set: { nombre: parametros.nombre, email: parametros.email } },
-          { new: true },
-          (err, usuarioActualizado) => {
-            if (err)
-              return res.status(500).send({ error: "Error en la pericion" });
-            if (!usuarioActualizado)
-              return res
-                .status(500)
-                .send({ error: "Error al editar el usuario" });
+    Usuario.find({ email: parametros.email }, (err, usuarioEncontrado1) => {
+      if (usuarioEncontrado1.length == 0) {
+        if (req.user.rol == "ROL_ADMIN") {
+          if (usuarioEncontrado.rol !== "ROL_USUARIO") {
             return res
-              .status(200)
-              .send({ usuarioActualizado: usuarioActualizado });
+              .status(403)
+              .send({ error: "Los administradores no se pueden editar" });
+          } else {
+            Usuario.findByIdAndUpdate(
+              idUser,
+              {
+                $set: { nombre: parametros.nombre, email: parametros.email },
+              },
+              { new: true },
+              (err, usuarioActualizado) => {
+                if (err)
+                  return res
+                    .status(500)
+                    .send({ error: "Error en la pericion" });
+                if (!usuarioActualizado)
+                  return res
+                    .status(500)
+                    .send({ error: "Error al editar el usuario" });
+                return res
+                  .status(200)
+                  .send({ usuarioActualizado: usuarioActualizado });
+              }
+            );
           }
-        );
-      }
-    } else {
-      Usuario.findByIdAndUpdate(
-        req.user.sub,
-        { $set: { nombre: parametros.nombre, email: parametros.email } },
-        { new: true },
-        (err, usuarioActualizado) => {
-          if (err)
-            return res
-              .status(500)
-              .send({ mensaje: "Error en la peticion del usuario" });
-          if (!usuarioActualizado)
-            return res
-              .status(500)
-              .send({ mensaje: "Error al editar el usuario" });
-          return res
-            .status(200)
-            .send({ usuarioActualizado: usuarioActualizado });
+        } else {
+          Usuario.findByIdAndUpdate(
+            req.user.sub,
+            { $set: { nombre: parametros.nombre, email: parametros.email } },
+            { new: true },
+            (err, usuarioActualizado) => {
+              if (err)
+                return res
+                  .status(500)
+                  .send({ mensaje: "Error en la peticion del usuario" });
+              if (!usuarioActualizado)
+                return res
+                  .status(500)
+                  .send({ mensaje: "Error al editar el usuario" });
+              return res
+                .status(200)
+                .send({ usuarioActualizado: usuarioActualizado });
+            }
+          );
         }
-      );
-    }
+      } else {
+        return res.status(500).send({ error: "El correo ya esta en uso" });
+      }
+    });
   });
 }
 
@@ -220,7 +231,7 @@ function eliminarUsuarios(req, res) {
           if (!usuarioEliminado)
             return res
               .status(403)
-              .send({ mensaje: "Error al eliminar el cliente" });
+              .send({ mensaje: "Error al eliminar el usuario" });
 
           return res.status(200).send({ usuario: usuarioEliminado });
         });
@@ -230,8 +241,96 @@ function eliminarUsuarios(req, res) {
 }
 
 function verUsuarios(req, res) {
-  Usuario.find({rol:"ROL_USUARIO"}, (err, usuarioEncontrado) => {
-    return res.status(200).send({usuarios: usuarioEncontrado});
+  Usuario.find({ rol: "ROL_USUARIO" }, (err, usuarioEncontrado) => {
+    return res.status(200).send({ usuarios: usuarioEncontrado });
+  });
+}
+
+function crearTorneo(req, res) {
+  const TorneoModel = new Torneo();
+  const parametros = req.body;
+
+  if (parametros.nombreTorneo) {
+    TorneoModel.nombreTorneo = parametros.nombreTorneo.toLowerCase();
+    TorneoModel.usuario = req.user.sub;
+
+    Torneo.find(
+      { nombreTorneo: parametros.nombreTorneo.toLowerCase() },
+      (err, TorneoEncontrado) => {
+        if (TorneoEncontrado.length === 0) {
+          TorneoModel.save((err, torneoGuardado) => {
+            if (err)
+              return res.status(500).send({ mensaje: "Error en la pertición" });
+            if (!torneoGuardado)
+              return res.status(404).send({ mensaje: "Error al crear" });
+            return res.status(200).send({ TorneoCreado: torneoGuardado });
+          });
+        } else {
+          return res
+            .status(403)
+            .send({ mensaje: "El nombre del torneo ya esta siendo utilizado" });
+        }
+      }
+    );
+  } else {
+    return res
+      .status(403)
+      .send({ mensaje: "Debe de enviar los parametros obligatorios" });
+  }
+}
+
+function editarTorneo(req, res) {
+  const idTorneo = req.params.idTorneo;
+  const parametros = req.body;
+
+  Torneo.find(
+    { nombreTorneo: parametros.nombreTorneo.toLowerCase() },
+    (err, TorneoEncontrado) => {
+      if (TorneoEncontrado.length === 0) {
+        Torneo.findByIdAndUpdate(
+          idTorneo,
+          { $set: { nombreTorneo: parametros.nombreTorneo.toLowerCase() } },
+          { new: true },
+          (err, torneoAtualizado) => {
+            if (err)
+              return res.status(500).send({ mensaje: "Error en la petición" });
+            if (!torneoAtualizado)
+              return res
+                .status(500)
+                .send({ mensaje: "Error al actualizar torneo" });
+            return res
+              .status(200)
+              .send({ torneoActualizado: torneoAtualizado });
+          }
+        );
+      } else {
+        return res
+          .status(403)
+          .send({ mensaje: "El nombre del torneo ya esta siendo utilizado" });
+      }
+    }
+  );
+}
+
+function eliminarTorneo(req, res) {
+  const idTorneo = req.params.idTorneo;
+
+  Torneo.findByIdAndDelete(idTorneo, (err, eliminarTorneo) => {
+    if (err) return res.status(500).send({ mensaje: "Error en la petición" });
+    if (!eliminarTorneo)
+      return res.status(500).send({ mensaje: "Error al eliminar el torneo" });
+
+    return res.status(200).send({ TorneoEliminado: eliminarTorneo });
+  });
+}
+
+function verTorneos(req, res) {
+
+  Torneo.find({}, {nombreTorneo:1}, (err, torneo) => {
+    if(err) return res.status(500).send({mensaje: "Error en la petición"})
+    if(!torneo) return res.status(404).send({mensaje: "Error en el buscar torneos"})
+
+    return res.status(200).send({Torneos: torneo})
   })
 }
 
@@ -242,5 +341,9 @@ module.exports = {
   registrarUsuarioAdmin,
   editarUsuario,
   eliminarUsuarios,
-  verUsuarios
+  verUsuarios,
+  crearTorneo,
+  editarTorneo,
+  eliminarTorneo,
+  verTorneos
 };
