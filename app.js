@@ -6,6 +6,7 @@ var app = express();
 // importacion de rutas
 
 const usuarioRutas = require('./src/routes/usuario.routes')
+const ligasRutas = require('./src/routes/ligas.routes')
 
 //MIDDLEWARES
 
