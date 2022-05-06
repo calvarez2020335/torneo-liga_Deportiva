@@ -1,41 +1,76 @@
-const Liga = require('../models/ligas.model')
-const Torneo = require('../models/torneos.model')
+const Liga = require("../models/ligas.model");
 
-function crearLiga(req, res){
-    const idTorneo = req.params.idTorneo;
-    const parametros = req.body;
-    const ligasModel = new Liga();
+function crearLiga(req, res) {
+  const parametros = req.body;
+  const ligasModel = new Liga();
 
-    if(parametros.nombreLiga){
+  if (parametros.nombreLiga) {
+      ligasModel.nombreLiga = parametros.nombreLiga;
+      ligasModel.usuario = req.user.sub;
 
-        ligasModel.nombreLiga = parametros.nombreLiga;
-        ligasModel.torneo = idTorneo;
-        ligasModel.usuario = req.user.sub;
+      Liga.find(
+        { nombreLiga: { $regex: parametros.nombreLiga, $options: "i" } },
+        (err, ligaEncontrada) => {
+          if (ligaEncontrada.length == 0) {
+            ligasModel.save((err, ligaGuardada) => {
+              if (err)
+                return res
+                  .status(403)
+                  .send({ mensaje: "Error en la pericion de la liga" });
+              if (!ligaGuardada)
+                return res.status(403).send({ mensaje: "Error al crear liga" });
 
-        Liga.find({nombreLiga: {$regex: parametros.nombreLiga, $options: "i"}}, (err, ligaEncontrada) => {
+              return res.status(200).send({ Liga: ligaGuardada });
+            });
+          } else {
+            return res
+              .status(500)
+              .send({ mensaje: "Este nombre ya esta siendo utilizado" });
+          }
+        }
+      );
+  } else {
+    return res
+      .status(500)
+      .send({ error: "Debe enviar los parametros obligatorios" });
+  }
+}
 
-            if(ligaEncontrada.length == 0){
+function verLigas(req, res) {
+  Liga.find(
+    { usuario: req.user.sub },
+    { nombreLiga: 1 },
+    (err, ligasEncontradas) => {
+      if (ligasEncontradas.length == 0) {
+        return res.status(200).send({ mensaje: "Usted no tiene ligas credas" });
+      } else {
+        if (err)
+          return res.status(500).send({ mensaje: "Error en la peticion" });
+        if (!ligasEncontradas)
+          return res.status(500).send({ mensaje: "Error al buscar las ligas" });
+        return res.status(200).send({ ligas: ligasEncontradas });
+      }
+    }
+  );
+}
 
-                ligasModel.save((err, ligaGuardada) => {
+function editarLigas(req, res) {
+  const parametros = req.body;
+  const ligaId = req.params.idLiga;
 
-                    if(err) return res.status(403).send({mensaje: "Error en la pericion de la liga"})
-                    if(!ligaGuardada) return res.status(403).send({mensaje: "Error al crear liga"})
+  Liga.findOne({ usuario: req.user.sub }, (err, ligasEncontradas) => {
 
-                    return res.status(200).send({Liga: ligaGuardada})
-                })
-                    
-            }else{
-                return res.status(500).send({mensaje: "Este nombre ya esta siendo utilizado"})
-            }
-
-        })
-
+    if(ligasEncontradas.usuario == req.user.sub){
+        return res.status(200).send({mensaje:"Es tuyo"})
     }else{
-        return res.status(500).send({ error: "Debe enviar los parametros obligatorios"})
+        return res.status(403).send({mensaje:"No es tuyo"})
     }
 
+  });
 }
 
-module.exports ={
-    crearLiga
-}
+module.exports = {
+  crearLiga,
+  verLigas,
+  editarLigas,
+};

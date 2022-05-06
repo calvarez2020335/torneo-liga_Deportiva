@@ -20,7 +20,7 @@ app.use(cors());
 
 //Carga de rutas
 
-app.use('/api', usuarioRutas);
+app.use('/api', usuarioRutas, ligasRutas);
 
 
 //Exportaciones

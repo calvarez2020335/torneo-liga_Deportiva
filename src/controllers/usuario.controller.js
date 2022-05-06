@@ -1,5 +1,4 @@
 const Usuario = require("../models/usuario.model");
-const Torneo = require("../models/torneos.model");
 const bcrypt = require("bcrypt-nodejs");
 const jwt = require("../services/jwt");
 
@@ -246,94 +245,6 @@ function verUsuarios(req, res) {
   });
 }
 
-function crearTorneo(req, res) {
-  const TorneoModel = new Torneo();
-  const parametros = req.body;
-
-  if (parametros.nombreTorneo) {
-    TorneoModel.nombreTorneo = parametros.nombreTorneo.toLowerCase();
-    TorneoModel.usuario = req.user.sub;
-
-    Torneo.find(
-      { nombreTorneo: parametros.nombreTorneo.toLowerCase() },
-      (err, TorneoEncontrado) => {
-        if (TorneoEncontrado.length === 0) {
-          TorneoModel.save((err, torneoGuardado) => {
-            if (err)
-              return res.status(500).send({ mensaje: "Error en la pertición" });
-            if (!torneoGuardado)
-              return res.status(404).send({ mensaje: "Error al crear" });
-            return res.status(200).send({ TorneoCreado: torneoGuardado });
-          });
-        } else {
-          return res
-            .status(403)
-            .send({ mensaje: "El nombre del torneo ya esta siendo utilizado" });
-        }
-      }
-    );
-  } else {
-    return res
-      .status(403)
-      .send({ mensaje: "Debe de enviar los parametros obligatorios" });
-  }
-}
-
-function editarTorneo(req, res) {
-  const idTorneo = req.params.idTorneo;
-  const parametros = req.body;
-
-  Torneo.find(
-    { nombreTorneo: parametros.nombreTorneo.toLowerCase() },
-    (err, TorneoEncontrado) => {
-      if (TorneoEncontrado.length === 0) {
-        Torneo.findByIdAndUpdate(
-          idTorneo,
-          { $set: { nombreTorneo: parametros.nombreTorneo.toLowerCase() } },
-          { new: true },
-          (err, torneoAtualizado) => {
-            if (err)
-              return res.status(500).send({ mensaje: "Error en la petición" });
-            if (!torneoAtualizado)
-              return res
-                .status(500)
-                .send({ mensaje: "Error al actualizar torneo" });
-            return res
-              .status(200)
-              .send({ torneoActualizado: torneoAtualizado });
-          }
-        );
-      } else {
-        return res
-          .status(403)
-          .send({ mensaje: "El nombre del torneo ya esta siendo utilizado" });
-      }
-    }
-  );
-}
-
-function eliminarTorneo(req, res) {
-  const idTorneo = req.params.idTorneo;
-
-  Torneo.findByIdAndDelete(idTorneo, (err, eliminarTorneo) => {
-    if (err) return res.status(500).send({ mensaje: "Error en la petición" });
-    if (!eliminarTorneo)
-      return res.status(500).send({ mensaje: "Error al eliminar el torneo" });
-
-    return res.status(200).send({ TorneoEliminado: eliminarTorneo });
-  });
-}
-
-function verTorneos(req, res) {
-
-  Torneo.find({}, {nombreTorneo:1}, (err, torneo) => {
-    if(err) return res.status(500).send({mensaje: "Error en la petición"})
-    if(!torneo) return res.status(404).send({mensaje: "Error en el buscar torneos"})
-
-    return res.status(200).send({Torneos: torneo})
-  })
-}
-
 module.exports = {
   adminInicio,
   registrarUsuario,
@@ -341,9 +252,5 @@ module.exports = {
   registrarUsuarioAdmin,
   editarUsuario,
   eliminarUsuarios,
-  verUsuarios,
-  crearTorneo,
-  editarTorneo,
-  eliminarTorneo,
-  verTorneos
+  verUsuarios
 };
