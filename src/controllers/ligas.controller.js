@@ -5,13 +5,14 @@ function crearLiga(req, res) {
   const ligasModel = new Liga();
 
   if (parametros.nombreLiga) {
-      ligasModel.nombreLiga = parametros.nombreLiga;
-      ligasModel.usuario = req.user.sub;
+    ligasModel.nombreLiga = parametros.nombreLiga;
 
-      Liga.find(
-        { nombreLiga: { $regex: parametros.nombreLiga, $options: "i" } },
-        (err, ligaEncontrada) => {
-          if (ligaEncontrada.length == 0) {
+    Liga.find(
+      { nombreLiga: { $regex: parametros.nombreLiga, $options: "i" } },
+      (err, ligaEncontrada) => {
+        if (ligaEncontrada.length == 0) {
+          if (req.user.rol == "ROL_USUARIO") {
+            ligasModel.usuario = req.user.sub;
             ligasModel.save((err, ligaGuardada) => {
               if (err)
                 return res
@@ -23,12 +24,33 @@ function crearLiga(req, res) {
               return res.status(200).send({ Liga: ligaGuardada });
             });
           } else {
-            return res
-              .status(500)
-              .send({ mensaje: "Este nombre ya esta siendo utilizado" });
+            const idUsuario = req.params.idUsuario;
+            if (idUsuario) {
+              ligasModel.usuario = idUsuario;
+              ligasModel.save((err, ligaGuardada) => {
+                if (err)
+                  return res
+                    .status(403)
+                    .send({ mensaje: "Error en la pericion de la liga" });
+                if (!ligaGuardada)
+                  return res
+                    .status(403)
+                    .send({ mensaje: "Error al crear liga" });
+                return res.status(200).send({ LigaCreada: ligaGuardada });
+              });
+            } else {
+              return res
+                .status(403)
+                .send({ mensaje: "Debe de enviar el id del usuario" });
+            }
           }
+        } else {
+          return res
+            .status(500)
+            .send({ mensaje: "Este nombre ya esta siendo utilizado" });
         }
-      );
+      }
+    );
   } else {
     return res
       .status(500)
@@ -37,6 +59,7 @@ function crearLiga(req, res) {
 }
 
 function verLigas(req, res) {
+
   Liga.find(
     { usuario: req.user.sub },
     { nombreLiga: 1 },
@@ -59,13 +82,11 @@ function editarLigas(req, res) {
   const ligaId = req.params.idLiga;
 
   Liga.findOne({ usuario: req.user.sub }, (err, ligasEncontradas) => {
-
-    if(ligasEncontradas.usuario == req.user.sub){
-        return res.status(200).send({mensaje:"Es tuyo"})
-    }else{
-        return res.status(403).send({mensaje:"No es tuyo"})
+    if (ligasEncontradas.usuario == req.user.sub) {
+      return res.status(200).send({ mensaje: "Es tuyo" });
+    } else {
+      return res.status(403).send({ mensaje: "No es tuyo" });
     }
-
   });
 }
 
