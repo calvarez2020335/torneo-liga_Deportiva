@@ -7,6 +7,7 @@ var app = express();
 
 const usuarioRutas = require('./src/routes/usuario.routes')
 const ligasRutas = require('./src/routes/ligas.routes')
+const equiposRutas = require('./src/routes/equipos.routes')
 
 //MIDDLEWARES
 
@@ -20,7 +21,7 @@ app.use(cors());
 
 //Carga de rutas
 
-app.use('/api', usuarioRutas, ligasRutas);
+app.use('/api', usuarioRutas, ligasRutas, equiposRutas);
 
 
 //Exportaciones

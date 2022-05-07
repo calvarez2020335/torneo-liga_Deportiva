@@ -10,3 +10,5 @@ const EquipoSchema = Schema({
     diferenciaGoles: Number,
     usuario: {type: Schema.Types.ObjectId, ref:'Usuarios'}
 })
+
+module.exports = mongoose.model('Equipos', EquipoSchema)
