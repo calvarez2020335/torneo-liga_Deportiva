@@ -202,15 +202,71 @@ function verTodosEquipos(req, res) {
 }
 
 function verEquiposPorLiga(req, res) {
-    if(req.user.rol == "ROL_USUARIO"){
-        const idLiga = req.params.idLiga;
-
-        
-
+  const idLiga = req.params.idLiga;
+  Liga.findOne({ _id: idLiga }, (err, equipoLiga) => {
+    if (equipoLiga.usuario == req.user.sub) {
+      Equipos.find({ liga: idLiga }, (err, equipoEquipo) => {
+        return res.status(200).send({ Equipos: equipoEquipo });
+      });
+    } else {
+      return res
+        .status(404)
+        .send({ error: "No puedes ver los equipos de esta liga" });
     }
+  });
 }
+
+function editarEquipos(req, res) {
+  const parametros = req.body;
+  const equipoId = req.params.idEquipo;
+  delete parametros.liga;
+
+  Equipos.find(
+    { nombreEquipo: { $regex: parametros.nombreEquipo, $options: "i" } },
+    (err, EquipoGeneralEncontrados) => {
+      if (EquipoGeneralEncontrados.length == 0) {
+        Equipos.findOne({_id:equipoId}, (err, encontrados) => {
+          if (req.user.sub == encontrados.usuario) {
+
+            Equipos.findByIdAndUpdate(
+              equipoId,
+              parametros,
+              { new: true },
+              (err, equipoActualizado) => {
+                if (err)
+                  return res
+                    .status(500)
+                    .send({ mensaje: "error en la peticion" });
+                if (!equipoActualizado)
+                  return res
+                    .status(500)
+                    .send({ mensaje: "no se pudo actualizar el equipo" });
+
+                return res.status(200).send({ Equipo: equipoActualizado });
+              }
+            );
+
+          } else {
+            return res
+              .status(404)
+              .send({ error: "No puedes editar este equipo" });
+          }
+        })
+
+      } else {
+        return res
+          .status(404)
+          .send({ error: "El nombre del equipo ya esta en uso" });
+      }
+    }
+  );
+}
+
+//El eliminar se hara con un deletemny
 
 module.exports = {
   crearEquipo,
   verTodosEquipos,
+  verEquiposPorLiga,
+  editarEquipos,
 };

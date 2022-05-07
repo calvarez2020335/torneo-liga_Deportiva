@@ -10,5 +10,7 @@ const api = express.Router()
 
 api.post('/crearEquipo/:idUsuario?', md_auth.Auth, equiposController.crearEquipo)
 api.get('/verEquipos/:idUsuario?', md_auth.Auth, equiposController.verTodosEquipos)
+api.get('/verEquiposLiga/:idLiga', [md_auth.Auth, md_roles.verUsuario], equiposController.verEquiposPorLiga)
+api.put('/editarEquipo/:idEquipo', [md_auth.Auth, md_roles.verUsuario], equiposController.editarEquipos)
 
 module.exports = api;
