@@ -21,7 +21,8 @@
     "moment": "^2.29.1",
     "mongoose": "^6.2.2",
     "nodemon": "^2.0.15",
-    "pdfkit": "^0.13.0"
+    "pdfkit": "^0.13.0",
+    "pdfkit-construct": "^1.2.3"
   },
   "bugs": {
     "url": "https://github.com/calvarez2020335/torneo-liga_Deportiva/issues"

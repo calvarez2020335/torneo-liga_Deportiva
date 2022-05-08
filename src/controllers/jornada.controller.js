@@ -1,6 +1,13 @@
 const Jornadas = require("../models/jornadas.model");
 const Equipos = require("../models/equipos.model");
 const Liga = require("../models/ligas.model");
+const PDFDocument = require("pdfkit");
+const fs = require("fs");
+const doc = new PDFDocument();
+let date = new Date()
+let day = date.getDate()
+let month = date.getMonth() + 1
+let year = date.getFullYear()
 
 function crearJornada(req, res) {
   const modeloJornada = new Jornadas();
@@ -136,133 +143,291 @@ function agregarPartido(req, res) {
                               });
                             } else {
                               //Logica aqui
-                              if(parametros.goles1 > parametros.goles2) {
-
+                              if (parametros.goles1 > parametros.goles2) {
                                 const data1 = {
                                   puntos: 0,
-                                  golesFavor : 0,
+                                  golesFavor: 0,
                                   golesContra: 0,
-                                  diferenciaGoles: 0
-                                }
+                                  diferenciaGoles: 0,
+                                };
                                 const data2 = {
                                   puntos: 0,
-                                  golesFavor : 0,
+                                  golesFavor: 0,
                                   golesContra: 0,
-                                  diferenciaGoles: 0
-                                }
-                                Equipos.findOne({nombreEquipo: parametros.equipo1}, (err, equipoEncontrado)=>{
-                                  Equipos.findOne({nombreEquipo: parametros.equipo2}, (err, equipoEncontrado2)=>{
-                                    //Equipo 1
-                                    data1.puntos = parseInt(equipoEncontrado.puntos) + parseInt(3)
-                                    data1.golesFavor = parseInt(equipoEncontrado.golesFavor) + parseInt(parametros.goles1);
-                                    data1.golesContra = parseInt(equipoEncontrado.golesContra) + parseInt(parametros.goles2);
-                                    data1.diferenciaGoles = data1.golesFavor - data1.golesContra;
-                                    //Equipo 2
-                                    data2.puntos = parseInt(equipoEncontrado2.puntos) + parseInt(0);
-                                    data2.golesFavor = parseInt(equipoEncontrado2.golesFavor) + parseInt(parametros.goles2);
-                                    data2.golesContra = parseInt(equipoEncontrado2.golesContra) + parseInt(parametros.goles1)
-                                    data2.diferenciaGoles = data2.golesFavor - data2.golesContra
-                                    Equipos.findByIdAndUpdate(equipoEncontrado.id, data1, {new: true}, (err, equipo1Actualizado)=>{
-                                      Equipos.findByIdAndUpdate(equipoEncontrado2.id, data2, {new: true}, (err, equipo2Actualizado)=>{
-                                        Jornadas.findByIdAndUpdate(jornadaId, {$push:{partidos: [{
-                                          equipo1: parametros.equipo1,
-                                          goles1: parametros.goles1,
-                                          equipo2: parametros.equipo2,
-                                          goles2: parametros.goles2
-                                        }]}}, {new: true}, (err, Jornadas)=>{
-                                          return res.status(200).send({partido: Jornadas})
-                                        })
-                                      })
-                                    })
-                                  })
-                                })
-
-                              }else if(parametros.goles1 == parametros.goles2){
-
+                                  diferenciaGoles: 0,
+                                };
+                                Equipos.findOne(
+                                  { nombreEquipo: parametros.equipo1 },
+                                  (err, equipoEncontrado) => {
+                                    Equipos.findOne(
+                                      { nombreEquipo: parametros.equipo2 },
+                                      (err, equipoEncontrado2) => {
+                                        //Equipo 1
+                                        data1.puntos =
+                                          parseInt(equipoEncontrado.puntos) +
+                                          parseInt(3);
+                                        data1.golesFavor =
+                                          parseInt(
+                                            equipoEncontrado.golesFavor
+                                          ) + parseInt(parametros.goles1);
+                                        data1.golesContra =
+                                          parseInt(
+                                            equipoEncontrado.golesContra
+                                          ) + parseInt(parametros.goles2);
+                                        data1.diferenciaGoles =
+                                          data1.golesFavor - data1.golesContra;
+                                        //Equipo 2
+                                        data2.puntos =
+                                          parseInt(equipoEncontrado2.puntos) +
+                                          parseInt(0);
+                                        data2.golesFavor =
+                                          parseInt(
+                                            equipoEncontrado2.golesFavor
+                                          ) + parseInt(parametros.goles2);
+                                        data2.golesContra =
+                                          parseInt(
+                                            equipoEncontrado2.golesContra
+                                          ) + parseInt(parametros.goles1);
+                                        data2.diferenciaGoles =
+                                          data2.golesFavor - data2.golesContra;
+                                        Equipos.findByIdAndUpdate(
+                                          equipoEncontrado.id,
+                                          data1,
+                                          { new: true },
+                                          (err, equipo1Actualizado) => {
+                                            Equipos.findByIdAndUpdate(
+                                              equipoEncontrado2.id,
+                                              data2,
+                                              { new: true },
+                                              (err, equipo2Actualizado) => {
+                                                Jornadas.findByIdAndUpdate(
+                                                  jornadaId,
+                                                  {
+                                                    $push: {
+                                                      partidos: [
+                                                        {
+                                                          equipo1:
+                                                            parametros.equipo1,
+                                                          goles1:
+                                                            parametros.goles1,
+                                                          equipo2:
+                                                            parametros.equipo2,
+                                                          goles2:
+                                                            parametros.goles2,
+                                                        },
+                                                      ],
+                                                    },
+                                                  },
+                                                  { new: true },
+                                                  (err, Jornadas) => {
+                                                    return res
+                                                      .status(200)
+                                                      .send({
+                                                        partido: Jornadas,
+                                                      });
+                                                  }
+                                                );
+                                              }
+                                            );
+                                          }
+                                        );
+                                      }
+                                    );
+                                  }
+                                );
+                              } else if (
+                                parametros.goles1 == parametros.goles2
+                              ) {
                                 const data1 = {
                                   puntos: 0,
-                                  golesFavor : 0,
+                                  golesFavor: 0,
                                   golesContra: 0,
-                                  diferenciaGoles: 0
-                                }
+                                  diferenciaGoles: 0,
+                                };
                                 const data2 = {
                                   puntos: 0,
-                                  golesFavor : 0,
+                                  golesFavor: 0,
                                   golesContra: 0,
-                                  diferenciaGoles: 0
-                                }
-                                Equipos.findOne({nombreEquipo: parametros.equipo1}, (err, equipoEncontrado)=>{
-                                  Equipos.findOne({nombreEquipo: parametros.equipo2}, (err, equipoEncontrado2)=>{
-                                    //Equipo 1
-                                    data1.puntos = parseInt(equipoEncontrado.puntos) + parseInt(1)
-                                    data1.golesFavor = parseInt(equipoEncontrado.golesFavor) + parseInt(parametros.goles1);
-                                    data1.golesContra = parseInt(equipoEncontrado.golesContra) + parseInt(parametros.goles2);
-                                    data1.diferenciaGoles = data1.golesFavor - data1.golesContra;
-                                    //Equipo 2
-                                    data2.puntos = parseInt(equipoEncontrado2.puntos) + parseInt(1);
-                                    data2.golesFavor = parseInt(equipoEncontrado2.golesFavor) + parseInt(parametros.goles2);
-                                    data2.golesContra = parseInt(equipoEncontrado2.golesContra) + parseInt(parametros.goles1)
-                                    data2.diferenciaGoles = data2.golesFavor - data2.golesContra
-                                    Equipos.findByIdAndUpdate(equipoEncontrado.id, data1, {new: true}, (err, equipo1Actualizado)=>{
-                                      Equipos.findByIdAndUpdate(equipoEncontrado2.id, data2, {new: true}, (err, equipo2Actualizado)=>{
-                                        Jornadas.findByIdAndUpdate(jornadaId, {$push:{partidos: [{
-                                          equipo1: parametros.equipo1,
-                                          goles1: parametros.goles1,
-                                          equipo2: parametros.equipo2,
-                                          goles2: parametros.goles2
-                                        }]}}, {new: true}, (err, Jornadas)=>{
-                                          return res.status(200).send({partido: Jornadas})
-                                        })
-                                      })
-                                    })
-                                  })
-                                })
-
-                              }else if(parametros.goles1 < parametros.goles2){
-
+                                  diferenciaGoles: 0,
+                                };
+                                Equipos.findOne(
+                                  { nombreEquipo: parametros.equipo1 },
+                                  (err, equipoEncontrado) => {
+                                    Equipos.findOne(
+                                      { nombreEquipo: parametros.equipo2 },
+                                      (err, equipoEncontrado2) => {
+                                        //Equipo 1
+                                        data1.puntos =
+                                          parseInt(equipoEncontrado.puntos) +
+                                          parseInt(1);
+                                        data1.golesFavor =
+                                          parseInt(
+                                            equipoEncontrado.golesFavor
+                                          ) + parseInt(parametros.goles1);
+                                        data1.golesContra =
+                                          parseInt(
+                                            equipoEncontrado.golesContra
+                                          ) + parseInt(parametros.goles2);
+                                        data1.diferenciaGoles =
+                                          data1.golesFavor - data1.golesContra;
+                                        //Equipo 2
+                                        data2.puntos =
+                                          parseInt(equipoEncontrado2.puntos) +
+                                          parseInt(1);
+                                        data2.golesFavor =
+                                          parseInt(
+                                            equipoEncontrado2.golesFavor
+                                          ) + parseInt(parametros.goles2);
+                                        data2.golesContra =
+                                          parseInt(
+                                            equipoEncontrado2.golesContra
+                                          ) + parseInt(parametros.goles1);
+                                        data2.diferenciaGoles =
+                                          data2.golesFavor - data2.golesContra;
+                                        Equipos.findByIdAndUpdate(
+                                          equipoEncontrado.id,
+                                          data1,
+                                          { new: true },
+                                          (err, equipo1Actualizado) => {
+                                            Equipos.findByIdAndUpdate(
+                                              equipoEncontrado2.id,
+                                              data2,
+                                              { new: true },
+                                              (err, equipo2Actualizado) => {
+                                                Jornadas.findByIdAndUpdate(
+                                                  jornadaId,
+                                                  {
+                                                    $push: {
+                                                      partidos: [
+                                                        {
+                                                          equipo1:
+                                                            parametros.equipo1,
+                                                          goles1:
+                                                            parametros.goles1,
+                                                          equipo2:
+                                                            parametros.equipo2,
+                                                          goles2:
+                                                            parametros.goles2,
+                                                        },
+                                                      ],
+                                                    },
+                                                  },
+                                                  { new: true },
+                                                  (err, Jornadas) => {
+                                                    return res
+                                                      .status(200)
+                                                      .send({
+                                                        partido: Jornadas,
+                                                      });
+                                                  }
+                                                );
+                                              }
+                                            );
+                                          }
+                                        );
+                                      }
+                                    );
+                                  }
+                                );
+                              } else if (
+                                parametros.goles1 < parametros.goles2
+                              ) {
                                 const data1 = {
                                   puntos: 0,
-                                  golesFavor : 0,
+                                  golesFavor: 0,
                                   golesContra: 0,
-                                  diferenciaGoles: 0
-                                }
+                                  diferenciaGoles: 0,
+                                };
                                 const data2 = {
                                   puntos: 0,
-                                  golesFavor : 0,
+                                  golesFavor: 0,
                                   golesContra: 0,
-                                  diferenciaGoles: 0
-                                }
-                                Equipos.findOne({nombreEquipo: parametros.equipo1}, (err, equipoEncontrado)=>{
-                                  Equipos.findOne({nombreEquipo: parametros.equipo2}, (err, equipoEncontrado2)=>{
-                                    //Equipo 1
-                                    data1.puntos = parseInt(equipoEncontrado.puntos) + parseInt(0)
-                                    data1.golesFavor = parseInt(equipoEncontrado.golesFavor) + parseInt(parametros.goles1);
-                                    data1.golesContra = parseInt(equipoEncontrado.golesContra) + parseInt(parametros.goles2);
-                                    data1.diferenciaGoles = data1.golesFavor - data1.golesContra;
-                                    //Equipo 2
-                                    data2.puntos = parseInt(equipoEncontrado2.puntos) + parseInt(3);
-                                    data2.golesFavor = parseInt(equipoEncontrado2.golesFavor) + parseInt(parametros.goles2);
-                                    data2.golesContra = parseInt(equipoEncontrado2.golesContra) + parseInt(parametros.goles1)
-                                    data2.diferenciaGoles = data2.golesFavor - data2.golesContra
-                                    Equipos.findByIdAndUpdate(equipoEncontrado.id, data1, {new: true}, (err, equipo1Actualizado)=>{
-                                      Equipos.findByIdAndUpdate(equipoEncontrado2.id, data2, {new: true}, (err, equipo2Actualizado)=>{
-                                        Jornadas.findByIdAndUpdate(jornadaId, {$push:{partidos: [{
-                                          equipo1: parametros.equipo1,
-                                          goles1: parametros.goles1,
-                                          equipo2: parametros.equipo2,
-                                          goles2: parametros.goles2
-                                        }]}}, {new: true}, (err, Jornadas)=>{
-                                          return res.status(200).send({partido: Jornadas})
-                                        })
-                                      })
-                                    })
-                                  })
-                                })
-
-                              }else{
-                                return res.status(500).send({mensaje: "Error al calcular los puntos par"})
+                                  diferenciaGoles: 0,
+                                };
+                                Equipos.findOne(
+                                  { nombreEquipo: parametros.equipo1 },
+                                  (err, equipoEncontrado) => {
+                                    Equipos.findOne(
+                                      { nombreEquipo: parametros.equipo2 },
+                                      (err, equipoEncontrado2) => {
+                                        //Equipo 1
+                                        data1.puntos =
+                                          parseInt(equipoEncontrado.puntos) +
+                                          parseInt(0);
+                                        data1.golesFavor =
+                                          parseInt(
+                                            equipoEncontrado.golesFavor
+                                          ) + parseInt(parametros.goles1);
+                                        data1.golesContra =
+                                          parseInt(
+                                            equipoEncontrado.golesContra
+                                          ) + parseInt(parametros.goles2);
+                                        data1.diferenciaGoles =
+                                          data1.golesFavor - data1.golesContra;
+                                        //Equipo 2
+                                        data2.puntos =
+                                          parseInt(equipoEncontrado2.puntos) +
+                                          parseInt(3);
+                                        data2.golesFavor =
+                                          parseInt(
+                                            equipoEncontrado2.golesFavor
+                                          ) + parseInt(parametros.goles2);
+                                        data2.golesContra =
+                                          parseInt(
+                                            equipoEncontrado2.golesContra
+                                          ) + parseInt(parametros.goles1);
+                                        data2.diferenciaGoles =
+                                          data2.golesFavor - data2.golesContra;
+                                        Equipos.findByIdAndUpdate(
+                                          equipoEncontrado.id,
+                                          data1,
+                                          { new: true },
+                                          (err, equipo1Actualizado) => {
+                                            Equipos.findByIdAndUpdate(
+                                              equipoEncontrado2.id,
+                                              data2,
+                                              { new: true },
+                                              (err, equipo2Actualizado) => {
+                                                Jornadas.findByIdAndUpdate(
+                                                  jornadaId,
+                                                  {
+                                                    $push: {
+                                                      partidos: [
+                                                        {
+                                                          equipo1:
+                                                            parametros.equipo1,
+                                                          goles1:
+                                                            parametros.goles1,
+                                                          equipo2:
+                                                            parametros.equipo2,
+                                                          goles2:
+                                                            parametros.goles2,
+                                                        },
+                                                      ],
+                                                    },
+                                                  },
+                                                  { new: true },
+                                                  (err, Jornadas) => {
+                                                    return res
+                                                      .status(200)
+                                                      .send({
+                                                        partido: Jornadas,
+                                                      });
+                                                  }
+                                                );
+                                              }
+                                            );
+                                          }
+                                        );
+                                      }
+                                    );
+                                  }
+                                );
+                              } else {
+                                return res.status(500).send({
+                                  mensaje: "Error al calcular los puntos par",
+                                });
                               }
-                              
                             }
                           } else {
                             //inpar
@@ -276,131 +441,292 @@ function agregarPartido(req, res) {
                               });
                             } else {
                               //Logica
-                              if(parametros.goles1 > parametros.goles2) {
+                              if (parametros.goles1 > parametros.goles2) {
                                 const data1 = {
                                   puntos: 0,
-                                  golesFavor : 0,
+                                  golesFavor: 0,
                                   golesContra: 0,
-                                  diferenciaGoles: 0
-                                }
+                                  diferenciaGoles: 0,
+                                };
                                 const data2 = {
                                   puntos: 0,
-                                  golesFavor : 0,
+                                  golesFavor: 0,
                                   golesContra: 0,
-                                  diferenciaGoles: 0
-                                }
-                                Equipos.findOne({nombreEquipo: parametros.equipo1}, (err, equipoEncontrado)=>{
-                                  Equipos.findOne({nombreEquipo: parametros.equipo2}, (err, equipoEncontrado2)=>{
-                                    //Equipo 1
-                                    data1.puntos = parseInt(equipoEncontrado.puntos) + parseInt(3)
-                                    data1.golesFavor = parseInt(equipoEncontrado.golesFavor) + parseInt(parametros.goles1);
-                                    data1.golesContra = parseInt(equipoEncontrado.golesContra) + parseInt(parametros.goles2);
-                                    data1.diferenciaGoles = data1.golesFavor - data1.golesContra;
-                                    //Equipo 2
-                                    data2.puntos = parseInt(equipoEncontrado2.puntos) + parseInt(0);
-                                    data2.golesFavor = parseInt(equipoEncontrado2.golesFavor) + parseInt(parametros.goles2);
-                                    data2.golesContra = parseInt(equipoEncontrado2.golesContra) + parseInt(parametros.goles1)
-                                    data2.diferenciaGoles = data2.golesFavor - data2.golesContra
-                                    Equipos.findByIdAndUpdate(equipoEncontrado.id, data1, {new: true}, (err, equipo1Actualizado)=>{
-                                      Equipos.findByIdAndUpdate(equipoEncontrado2.id, data2, {new: true}, (err, equipo2Actualizado)=>{
-                                        Jornadas.findByIdAndUpdate(jornadaId, {$push:{partidos: [{
-                                          equipo1: parametros.equipo1,
-                                          goles1: parametros.goles1,
-                                          equipo2: parametros.equipo2,
-                                          goles2: parametros.goles2
-                                        }]}}, {new: true}, (err, Jornadas)=>{
-                                          return res.status(200).send({partido: Jornadas})
-                                        })
-                                      })
-                                    })
-                                  })
-                                })
-                              }else if(parametros.goles1 == parametros.goles2){
-
+                                  diferenciaGoles: 0,
+                                };
+                                Equipos.findOne(
+                                  { nombreEquipo: parametros.equipo1 },
+                                  (err, equipoEncontrado) => {
+                                    Equipos.findOne(
+                                      { nombreEquipo: parametros.equipo2 },
+                                      (err, equipoEncontrado2) => {
+                                        //Equipo 1
+                                        data1.puntos =
+                                          parseInt(equipoEncontrado.puntos) +
+                                          parseInt(3);
+                                        data1.golesFavor =
+                                          parseInt(
+                                            equipoEncontrado.golesFavor
+                                          ) + parseInt(parametros.goles1);
+                                        data1.golesContra =
+                                          parseInt(
+                                            equipoEncontrado.golesContra
+                                          ) + parseInt(parametros.goles2);
+                                        data1.diferenciaGoles =
+                                          data1.golesFavor - data1.golesContra;
+                                        //Equipo 2
+                                        data2.puntos =
+                                          parseInt(equipoEncontrado2.puntos) +
+                                          parseInt(0);
+                                        data2.golesFavor =
+                                          parseInt(
+                                            equipoEncontrado2.golesFavor
+                                          ) + parseInt(parametros.goles2);
+                                        data2.golesContra =
+                                          parseInt(
+                                            equipoEncontrado2.golesContra
+                                          ) + parseInt(parametros.goles1);
+                                        data2.diferenciaGoles =
+                                          data2.golesFavor - data2.golesContra;
+                                        Equipos.findByIdAndUpdate(
+                                          equipoEncontrado.id,
+                                          data1,
+                                          { new: true },
+                                          (err, equipo1Actualizado) => {
+                                            Equipos.findByIdAndUpdate(
+                                              equipoEncontrado2.id,
+                                              data2,
+                                              { new: true },
+                                              (err, equipo2Actualizado) => {
+                                                Jornadas.findByIdAndUpdate(
+                                                  jornadaId,
+                                                  {
+                                                    $push: {
+                                                      partidos: [
+                                                        {
+                                                          equipo1:
+                                                            parametros.equipo1,
+                                                          goles1:
+                                                            parametros.goles1,
+                                                          equipo2:
+                                                            parametros.equipo2,
+                                                          goles2:
+                                                            parametros.goles2,
+                                                        },
+                                                      ],
+                                                    },
+                                                  },
+                                                  { new: true },
+                                                  (err, Jornadas) => {
+                                                    return res
+                                                      .status(200)
+                                                      .send({
+                                                        partido: Jornadas,
+                                                      });
+                                                  }
+                                                );
+                                              }
+                                            );
+                                          }
+                                        );
+                                      }
+                                    );
+                                  }
+                                );
+                              } else if (
+                                parametros.goles1 == parametros.goles2
+                              ) {
                                 const data1 = {
                                   puntos: 0,
-                                  golesFavor : 0,
+                                  golesFavor: 0,
                                   golesContra: 0,
-                                  diferenciaGoles: 0
-                                }
+                                  diferenciaGoles: 0,
+                                };
                                 const data2 = {
                                   puntos: 0,
-                                  golesFavor : 0,
+                                  golesFavor: 0,
                                   golesContra: 0,
-                                  diferenciaGoles: 0
-                                }
-                                Equipos.findOne({nombreEquipo: parametros.equipo1}, (err, equipoEncontrado)=>{
-                                  Equipos.findOne({nombreEquipo: parametros.equipo2}, (err, equipoEncontrado2)=>{
-                                    //Equipo 1
-                                    data1.puntos = parseInt(equipoEncontrado.puntos) + parseInt(1)
-                                    data1.golesFavor = parseInt(equipoEncontrado.golesFavor) + parseInt(parametros.goles1);
-                                    data1.golesContra = parseInt(equipoEncontrado.golesContra) + parseInt(parametros.goles2);
-                                    data1.diferenciaGoles = data1.golesFavor - data1.golesContra;
-                                    //Equipo 2
-                                    data2.puntos = parseInt(equipoEncontrado2.puntos) + parseInt(1);
-                                    data2.golesFavor = parseInt(equipoEncontrado2.golesFavor) + parseInt(parametros.goles2);
-                                    data2.golesContra = parseInt(equipoEncontrado2.golesContra) + parseInt(parametros.goles1)
-                                    data2.diferenciaGoles = data2.golesFavor - data2.golesContra
-                                    Equipos.findByIdAndUpdate(equipoEncontrado.id, data1, {new: true}, (err, equipo1Actualizado)=>{
-                                      Equipos.findByIdAndUpdate(equipoEncontrado2.id, data2, {new: true}, (err, equipo2Actualizado)=>{
-                                        Jornadas.findByIdAndUpdate(jornadaId, {$push:{partidos: [{
-                                          equipo1: parametros.equipo1,
-                                          goles1: parametros.goles1,
-                                          equipo2: parametros.equipo2,
-                                          goles2: parametros.goles2
-                                        }]}}, {new: true}, (err, Jornadas)=>{
-                                          return res.status(200).send({partido: Jornadas})
-                                        })
-                                      })
-                                    })
-                                  })
-                                })
-
-                              }else if(parametros.goles1 < parametros.goles2){
-
+                                  diferenciaGoles: 0,
+                                };
+                                Equipos.findOne(
+                                  { nombreEquipo: parametros.equipo1 },
+                                  (err, equipoEncontrado) => {
+                                    Equipos.findOne(
+                                      { nombreEquipo: parametros.equipo2 },
+                                      (err, equipoEncontrado2) => {
+                                        //Equipo 1
+                                        data1.puntos =
+                                          parseInt(equipoEncontrado.puntos) +
+                                          parseInt(1);
+                                        data1.golesFavor =
+                                          parseInt(
+                                            equipoEncontrado.golesFavor
+                                          ) + parseInt(parametros.goles1);
+                                        data1.golesContra =
+                                          parseInt(
+                                            equipoEncontrado.golesContra
+                                          ) + parseInt(parametros.goles2);
+                                        data1.diferenciaGoles =
+                                          data1.golesFavor - data1.golesContra;
+                                        //Equipo 2
+                                        data2.puntos =
+                                          parseInt(equipoEncontrado2.puntos) +
+                                          parseInt(1);
+                                        data2.golesFavor =
+                                          parseInt(
+                                            equipoEncontrado2.golesFavor
+                                          ) + parseInt(parametros.goles2);
+                                        data2.golesContra =
+                                          parseInt(
+                                            equipoEncontrado2.golesContra
+                                          ) + parseInt(parametros.goles1);
+                                        data2.diferenciaGoles =
+                                          data2.golesFavor - data2.golesContra;
+                                        Equipos.findByIdAndUpdate(
+                                          equipoEncontrado.id,
+                                          data1,
+                                          { new: true },
+                                          (err, equipo1Actualizado) => {
+                                            Equipos.findByIdAndUpdate(
+                                              equipoEncontrado2.id,
+                                              data2,
+                                              { new: true },
+                                              (err, equipo2Actualizado) => {
+                                                Jornadas.findByIdAndUpdate(
+                                                  jornadaId,
+                                                  {
+                                                    $push: {
+                                                      partidos: [
+                                                        {
+                                                          equipo1:
+                                                            parametros.equipo1,
+                                                          goles1:
+                                                            parametros.goles1,
+                                                          equipo2:
+                                                            parametros.equipo2,
+                                                          goles2:
+                                                            parametros.goles2,
+                                                        },
+                                                      ],
+                                                    },
+                                                  },
+                                                  { new: true },
+                                                  (err, Jornadas) => {
+                                                    return res
+                                                      .status(200)
+                                                      .send({
+                                                        partido: Jornadas,
+                                                      });
+                                                  }
+                                                );
+                                              }
+                                            );
+                                          }
+                                        );
+                                      }
+                                    );
+                                  }
+                                );
+                              } else if (
+                                parametros.goles1 < parametros.goles2
+                              ) {
                                 const data1 = {
                                   puntos: 0,
-                                  golesFavor : 0,
+                                  golesFavor: 0,
                                   golesContra: 0,
-                                  diferenciaGoles: 0
-                                }
+                                  diferenciaGoles: 0,
+                                };
                                 const data2 = {
                                   puntos: 0,
-                                  golesFavor : 0,
+                                  golesFavor: 0,
                                   golesContra: 0,
-                                  diferenciaGoles: 0
-                                }
-                                Equipos.findOne({nombreEquipo: parametros.equipo1}, (err, equipoEncontrado)=>{
-                                  Equipos.findOne({nombreEquipo: parametros.equipo2}, (err, equipoEncontrado2)=>{
-                                    //Equipo 1
-                                    data1.puntos = parseInt(equipoEncontrado.puntos) + parseInt(0)
-                                    data1.golesFavor = parseInt(equipoEncontrado.golesFavor) + parseInt(parametros.goles1);
-                                    data1.golesContra = parseInt(equipoEncontrado.golesContra) + parseInt(parametros.goles2);
-                                    data1.diferenciaGoles = data1.golesFavor - data1.golesContra;
-                                    //Equipo 2
-                                    data2.puntos = parseInt(equipoEncontrado2.puntos) + parseInt(3);
-                                    data2.golesFavor = parseInt(equipoEncontrado2.golesFavor) + parseInt(parametros.goles2);
-                                    data2.golesContra = parseInt(equipoEncontrado2.golesContra) + parseInt(parametros.goles1)
-                                    data2.diferenciaGoles = data2.golesFavor - data2.golesContra
-                                    Equipos.findByIdAndUpdate(equipoEncontrado.id, data1, {new: true}, (err, equipo1Actualizado)=>{
-                                      Equipos.findByIdAndUpdate(equipoEncontrado2.id, data2, {new: true}, (err, equipo2Actualizado)=>{
-                                        Jornadas.findByIdAndUpdate(jornadaId, {$push:{partidos: [{
-                                          equipo1: parametros.equipo1,
-                                          goles1: parametros.goles1,
-                                          equipo2: parametros.equipo2,
-                                          goles2: parametros.goles2
-                                        }]}}, {new: true}, (err, Jornadas)=>{
-                                          return res.status(200).send({partido: Jornadas})
-                                        })
-                                      })
-                                    })
-                                  })
-                                })
-
-                              }else{
-                                return res.status(500).send({mensaje: "Erron a la hora de hacer el puntaje"})
+                                  diferenciaGoles: 0,
+                                };
+                                Equipos.findOne(
+                                  { nombreEquipo: parametros.equipo1 },
+                                  (err, equipoEncontrado) => {
+                                    Equipos.findOne(
+                                      { nombreEquipo: parametros.equipo2 },
+                                      (err, equipoEncontrado2) => {
+                                        //Equipo 1
+                                        data1.puntos =
+                                          parseInt(equipoEncontrado.puntos) +
+                                          parseInt(0);
+                                        data1.golesFavor =
+                                          parseInt(
+                                            equipoEncontrado.golesFavor
+                                          ) + parseInt(parametros.goles1);
+                                        data1.golesContra =
+                                          parseInt(
+                                            equipoEncontrado.golesContra
+                                          ) + parseInt(parametros.goles2);
+                                        data1.diferenciaGoles =
+                                          data1.golesFavor - data1.golesContra;
+                                        //Equipo 2
+                                        data2.puntos =
+                                          parseInt(equipoEncontrado2.puntos) +
+                                          parseInt(3);
+                                        data2.golesFavor =
+                                          parseInt(
+                                            equipoEncontrado2.golesFavor
+                                          ) + parseInt(parametros.goles2);
+                                        data2.golesContra =
+                                          parseInt(
+                                            equipoEncontrado2.golesContra
+                                          ) + parseInt(parametros.goles1);
+                                        data2.diferenciaGoles =
+                                          data2.golesFavor - data2.golesContra;
+                                        Equipos.findByIdAndUpdate(
+                                          equipoEncontrado.id,
+                                          data1,
+                                          { new: true },
+                                          (err, equipo1Actualizado) => {
+                                            Equipos.findByIdAndUpdate(
+                                              equipoEncontrado2.id,
+                                              data2,
+                                              { new: true },
+                                              (err, equipo2Actualizado) => {
+                                                Jornadas.findByIdAndUpdate(
+                                                  jornadaId,
+                                                  {
+                                                    $push: {
+                                                      partidos: [
+                                                        {
+                                                          equipo1:
+                                                            parametros.equipo1,
+                                                          goles1:
+                                                            parametros.goles1,
+                                                          equipo2:
+                                                            parametros.equipo2,
+                                                          goles2:
+                                                            parametros.goles2,
+                                                        },
+                                                      ],
+                                                    },
+                                                  },
+                                                  { new: true },
+                                                  (err, Jornadas) => {
+                                                    return res
+                                                      .status(200)
+                                                      .send({
+                                                        partido: Jornadas,
+                                                      });
+                                                  }
+                                                );
+                                              }
+                                            );
+                                          }
+                                        );
+                                      }
+                                    );
+                                  }
+                                );
+                              } else {
+                                return res.status(500).send({
+                                  mensaje:
+                                    "Erron a la hora de hacer el puntaje",
+                                });
                               }
-                              
                             }
                           }
                         });
@@ -421,13 +747,17 @@ function agregarPartido(req, res) {
   }
 }
 
-function verTablaDePosiciones(req, res){
+function verTablaDePosiciones(req, res) {
   const idLiga = req.params.idLiga;
   Liga.findOne({ _id: idLiga }, (err, equipoLiga) => {
     if (equipoLiga.usuario == req.user.sub) {
-      Equipos.find({ liga: idLiga },{_id:0,liga:0,usuario:0}, (err, equipoEquipo) => {
-        return res.status(200).send({ Equipos: equipoEquipo });
-      }).sort({puntos:-1});
+      Equipos.find(
+        { liga: idLiga },
+        { _id: 0, liga: 0, usuario: 0 },
+        (err, equipoEquipo) => {
+          return res.status(200).send({ Equipos: equipoEquipo });
+        }
+      ).sort({ puntos: -1 });
     } else {
       return res
         .status(404)
@@ -436,10 +766,95 @@ function verTablaDePosiciones(req, res){
   });
 }
 
+function pdf(req, res) {
+  const idLiga = req.params.idLiga;
+  doc.fillColor("#444444").fontSize(32).text("Tabla de liga", {
+    align: "center",
+    bold: true,
+  });
+  doc
+    .fillColor("#444444")
+    .fontSize(32)
+    .text(req.user.nombre, { align: "center", bold: true, underline: true })
+    .moveDown();
 
+  Liga.findOne({ _id: idLiga }, (err, equipoLiga) => {
+    if (equipoLiga.usuario == req.user.sub) {
+      Equipos.find(
+        { liga: idLiga },
+        { _id: 0, liga: 0, usuario: 0 },
+        (err, equipoEquipo) => {
+          doc.pipe(fs.createWriteStream("reportes/" + equipoLiga.nombreLiga + ".pdf"));
+          ////////////////////////////////////////////////////////////////
+          for (let i = 0; i < equipoEquipo.length; i++) {
+            equipoEquipo[i].nombreEquipo;
+          }
+
+          const beginningOfPage = 0;
+          doc.moveTo(beginningOfPage, 200).lineTo(1000, 200).stroke();
+
+          doc
+            .fontSize(16)
+            .text(`Total de equipos: ` + equipoEquipo.length, 50, 220, {align: "center",bold: true});
+
+          doc.moveTo(beginningOfPage, 250).lineTo(1000, 250).stroke().moveDown();
+          ////////////////////////////////////////////////////////////////
+
+          const tableTop = 280;
+          const itemCodeX = 150;
+          const descriptionX = 270;
+          const quantityX = 320;
+          const priceX = 370;
+          const df = 420;
+
+          doc
+            .fontSize(15)
+            .text("Equipo", itemCodeX, tableTop, {
+              bold: true,
+              underline: true,
+            })
+            .text("Pts", descriptionX, tableTop, {
+              bold: true,
+              underline: true,
+            })
+            .text("GF", quantityX, tableTop, { bold: true, underline: true })
+            .text("GC", priceX, tableTop, { bold: true, underline: true })
+            .text("DF", df, tableTop, { bold: true, underline: true });
+
+          let i = 0;
+          for (i = 0; i < equipoEquipo.length; i++) {
+            const y = tableTop + 25 + i * 25;
+
+            doc.text(equipoEquipo[i].nombreEquipo, itemCodeX, y);
+            doc.text(equipoEquipo[i].puntos, descriptionX, y);
+            doc.text(equipoEquipo[i].golesFavor, quantityX, y);
+            doc.text(equipoEquipo[i].golesContra, priceX, y);
+            doc.text(equipoEquipo[i].diferenciaGoles, df, y);
+          }
+
+          doc.fontSize(10);
+          if (month < 10) {
+            doc.text(`${day}-0${month}-${year}`, 50, 700, { align: "center" });
+          } else {
+            doc.text(`${day}-${month}-${year}`, 50, 700, { align: "center" });
+          }
+
+          doc.end();
+        }
+      ).sort({ puntos: -1 });
+    } else {
+      return res
+        .status(404)
+        .send({ error: "No puedes ver los equipos de esta liga" });
+    }
+  });
+
+  return res.status(200).send("PDF Generado");
+}
 
 module.exports = {
   crearJornada,
   agregarPartido,
-  verTablaDePosiciones
+  verTablaDePosiciones,
+  pdf,
 };
