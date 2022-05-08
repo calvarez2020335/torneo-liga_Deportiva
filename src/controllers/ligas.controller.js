@@ -1,5 +1,6 @@
 const Liga = require("../models/ligas.model");
-const Usuario = require("../models/usuario.model");
+const jornadas = require("../models/jornadas.model");
+const equipos = require("../models/equipos.model");
 
 function crearLiga(req, res) {
   const parametros = req.body;
@@ -144,7 +145,9 @@ function editarLigas(req, res) {
               }
             );
           } else {
-            return res.status(500).send({ error: "No puede editar otras ligas"})
+            return res
+              .status(500)
+              .send({ error: "No puede editar otras ligas" });
           }
         }
       } else {
@@ -154,7 +157,52 @@ function editarLigas(req, res) {
   });
 }
 
-//Eliminar la liga faltari pq lo hare con una eliminacion en cadena
+function eliminarLigas(req, res) {
+  const idLiga = req.params.idLiga;
+  Liga.findOne({ _id: idLiga }, (err, ligaUsuario) => {
+    if (req.user.rol == "ROL_ADMIN") {
+
+      jornadas.deleteMany({ liga: idLiga }, (err, ligaDeleted) => {
+        if (err)return res.status(404).send({ mensaje: "Error en la peticion" });
+      })
+
+      equipos.deleteMany({ liga: idLiga }, (err, equipoDeleted)=>{
+        if (err)return res.status(404).send({ mensaje: "Error en la peticion" });
+      })
+
+      Liga.findByIdAndDelete(idLiga, (err, ligaDelete)=>{
+        if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
+        if (!ligaDelete)return res.status(403).send({ mensaje: "Error al eliminar el usuario" });
+
+        return res.status(200).send({ liga: ligaDelete });
+      })
+
+    } else {
+      if (req.user.sub == ligaUsuario.usuario) {
+
+        jornadas.deleteMany({ liga: idLiga }, (err, ligaDeleted) => {
+          if (err)return res.status(404).send({ mensaje: "Error en la peticion" });
+        })
+  
+        equipos.deleteMany({ liga: idLiga }, (err, equipoDeleted)=>{
+          if (err)return res.status(404).send({ mensaje: "Error en la peticion" });
+        })
+  
+        Liga.findByIdAndDelete(idLiga, (err, ligaDelete)=>{
+          if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
+          if (!ligaDelete)return res.status(403).send({ mensaje: "Error al eliminar el usuario" });
+  
+          return res.status(200).send({ liga: ligaDelete });
+        })
+
+      } else {
+        return res
+          .status(500)
+          .send({ error: "No puede eliminar ligas que no le pertenezcan" });
+      }
+    }
+  });
+}
 
 module.exports = {
   crearLiga,
@@ -162,4 +210,5 @@ module.exports = {
   editarLigas,
   verLigasUsuarios,
   verTodasLigas,
+  eliminarLigas,
 };

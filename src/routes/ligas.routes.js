@@ -15,6 +15,7 @@ api.get('/verLigas', [md_auth.Auth, md_roles.verUsuario], ligasController.verLig
 api.get('/verligasUsuario/:idUsuario', [md_auth.Auth, md_roles.verAdministrador], ligasController.verLigasUsuarios)
 api.get('/verTodaslasLigas', [md_auth.Auth, md_roles.verAdministrador], ligasController.verTodasLigas)
 api.put('/editarLiga/:idLiga', md_auth.Auth, ligasController.editarLigas)
+api.delete('/eliminarLiga/:idLiga', md_auth.Auth, ligasController.eliminarLigas)
 
 //Importacion
 module.exports = api;

@@ -225,9 +225,8 @@ function editarEquipos(req, res) {
     { nombreEquipo: { $regex: parametros.nombreEquipo, $options: "i" } },
     (err, EquipoGeneralEncontrados) => {
       if (EquipoGeneralEncontrados.length == 0) {
-        Equipos.findOne({_id:equipoId}, (err, encontrados) => {
+        Equipos.findOne({ _id: equipoId }, (err, encontrados) => {
           if (req.user.sub == encontrados.usuario) {
-
             Equipos.findByIdAndUpdate(
               equipoId,
               parametros,
@@ -245,14 +244,12 @@ function editarEquipos(req, res) {
                 return res.status(200).send({ Equipo: equipoActualizado });
               }
             );
-
           } else {
             return res
               .status(404)
               .send({ error: "No puedes editar este equipo" });
           }
-        })
-
+        });
       } else {
         return res
           .status(404)
@@ -262,11 +259,28 @@ function editarEquipos(req, res) {
   );
 }
 
-//El eliminar se hara con un deletemny
+function eliminarEquipo(req, res) {
+  const idEquipo = req.params.idEquipo;
+  Equipos.findOne({ _id: idEquipo }, (err, encontrados) => {
+    if (req.user.sub == encontrados.usuario) {
+      
+      Equipos.findByIdAndDelete(idEquipo, (err, EquipoDelete)=>{
+        if(err) return res.status(500).send({ mensaje: "Error en la peticion"})
+        if(!EquipoDelete) return res.status(500).send({ mensaje: "Error en la peticion"})
+
+        return res.status(200).send({equipoEliminado: EquipoDelete})
+      })
+
+    } else {
+      return res.status(404).send({ error: "No puedes editar este equipo" });
+    }
+  });
+}
 
 module.exports = {
   crearEquipo,
   verTodosEquipos,
   verEquiposPorLiga,
   editarEquipos,
+  eliminarEquipo
 };

@@ -1,4 +1,7 @@
 const Usuario = require("../models/usuario.model");
+const jornadas = require("../models/jornadas.model");
+const equipos = require("../models/equipos.model");
+const ligas = require("../models/ligas.model")
 const bcrypt = require("bcrypt-nodejs");
 const jwt = require("../services/jwt");
 
@@ -224,9 +227,21 @@ function eliminarUsuarios(req, res) {
           .status(403)
           .send({ mensaje: "No se pueden eliminar a los Administradores" });
       } else {
+
+        jornadas.deleteMany({ usuario: idUser }, (err, jornadaEliminada) => {
+          if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
+        })
+
+        equipos.deleteMany({ usuario: idUser }, (err, equipoUsuarioEliminado)=>{
+          if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
+        })
+
+        ligas.deleteMany({ usuario: idUser}, (err, ligaeliminada)=>{
+          if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
+        })
+
         Usuario.findByIdAndDelete(idUser, (err, usuarioEliminado) => {
-          if (err)
-            return res.status(500).send({ mensaje: "Error en la peticion" });
+          if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
           if (!usuarioEliminado)
             return res
               .status(403)
@@ -234,6 +249,7 @@ function eliminarUsuarios(req, res) {
 
           return res.status(200).send({ usuario: usuarioEliminado });
         });
+        
       }
     }
   });
